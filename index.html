@@ -1,0 +1,2559 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ONE MORE SCROLL</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+ width:100%;height:100%;overflow:hidden;
+ font-family:Arial,sans-serif;background:#fff
+}
+img{user-select:none;-webkit-user-drag:none}
+button,input{font:inherit}
+button{cursor:pointer}
+
+.page{
+ position:fixed;inset:0;display:none;
+ align-items:center;justify-content:center;background:white
+}
+.page.on{display:flex}
+
+#welcome,#select{cursor:none}
+#logoBox{width:min(46vw,560px);transition:transform .12s}
+#logoBox img{width:100%}
+#startHint{
+ position:absolute;bottom:34px;color:#bbb;
+ font-size:12px;letter-spacing:7px
+}
+
+/* CUSTOM CURSOR */
+
+#cursorPhone{
+ position:fixed;left:50%;top:50%;z-index:999;
+ width:52px;height:86px;background:white;
+ border:3px solid #111;border-radius:12px;
+ transform:translate(-50%,-50%) rotate(-18deg);
+ pointer-events:none
+}
+#cursorPhone:after{
+ content:"♥";position:absolute;inset:0;
+ display:grid;place-items:center;
+ color:#ff5e8c;font-size:30px
+}
+#glow{
+ position:fixed;width:170px;height:170px;border-radius:50%;
+ background:radial-gradient(circle,#ff7ca744,transparent 70%);
+ transform:translate(-50%,-50%);pointer-events:none;
+ opacity:0;z-index:998
+}
+
+/* CHARACTER SELECTION */
+
+#select{flex-direction:column}
+#select h1{
+ position:absolute;top:9%;
+ font-size:clamp(28px,3vw,48px)
+}
+.people{display:flex;gap:min(12vw,140px)}
+.person{
+ display:flex;flex-direction:column;align-items:center
+}
+.person img{
+ width:min(28vw,270px);height:260px;object-fit:contain
+}
+.person b{font-size:24px;letter-spacing:4px}
+.person.scared img{animation:shake .12s infinite alternate}
+.person.fade{opacity:0;transition:.3s}
+@keyframes shake{to{transform:translateX(4px)}}
+.heart{position:fixed;pointer-events:none;z-index:1000}
+
+/* NAME */
+
+#namePage{flex-direction:column;gap:22px}
+#namePage h1{font-size:clamp(28px,3vw,44px)}
+#nameInput{
+ width:min(420px,80vw);padding:16px;border:0;
+ border-bottom:2px solid #111;text-align:center;
+ font-size:24px;outline:none
+}
+#go{
+ padding:14px 38px;border:2px solid #111;
+ border-radius:30px;background:white
+}
+
+/* ROOM - ORIGINAL DIMENSIONS */
+
+#main{
+ overflow:hidden;background:#f4f4f4;
+ justify-content:flex-start;align-items:flex-start
+}
+#track{
+ position:relative;flex:none;width:max-content;
+ height:128vh;top:-12vh;will-change:transform
+}
+#bg{display:block;height:128vh;width:auto;max-width:none}
+#bedHotspot{
+ position:absolute;left:5.4%;top:66.5%;
+ width:8.2%;height:8.2%;z-index:25;cursor:pointer
+}
+#ringFx{
+ position:absolute;left:6.2%;top:64%;
+ width:36px;height:36px;z-index:26;
+ pointer-events:none;display:none
+}
+.ringLine{
+ position:absolute;inset:0;
+ border:2px solid #ff5c87aa;border-radius:50%;
+ animation:ringPulse 1s infinite
+}
+.ringLine:nth-child(2){animation-delay:.22s}
+.ringLine:nth-child(3){animation-delay:.44s}
+@keyframes ringPulse{
+ 0%{transform:scale(.4);opacity:.9}
+ 70%{transform:scale(1.25);opacity:0}
+ 100%{opacity:0}
+}
+#note{
+ position:fixed;right:4.5%;top:15%;
+ width:min(390px,34vw);padding:18px;background:white;
+ border-radius:22px;display:flex;align-items:center;
+ gap:15px;box-shadow:0 10px 30px #0002;
+ opacity:0;transform:translateY(-12px);
+ transition:.8s;pointer-events:none;z-index:50
+}
+#note.show{opacity:1;transform:translateY(0)}
+#noteIcon{
+ width:52px;height:52px;flex:none;display:grid;
+ place-items:center;border-radius:14px;
+ background:#ff6b95;color:white;font-size:25px
+}
+#noteText small{
+ display:block;color:#aaa;font-size:12px;
+ letter-spacing:2px;margin-bottom:4px
+}
+#noteText div{font-size:16px;line-height:1.4;color:#222}
+.hint{
+ position:absolute;display:none;font-size:11px;
+ letter-spacing:6px;color:#ff4f7d73;cursor:pointer;
+ z-index:35;animation:blink 1s infinite alternate
+}
+@keyframes blink{to{opacity:.2}}
+#phoneHint{left:6%;top:66.2%}
+#sofaHint{right:2.2%;top:60.8%}
+#sofaHotspot{
+ position:absolute;right:1.6%;top:47.8%;
+ width:18%;height:18%;z-index:31;
+ display:none;cursor:pointer
+}
+#walker{
+ position:absolute;left:-340px;bottom:13.7%;
+ height:38.5%;width:auto;z-index:22;
+ display:none;pointer-events:none
+}
+
+/* PHONE - ORIGINAL POSITION */
+
+#phonePanel{
+ position:fixed;left:12%;top:50%;
+ width:290px;height:560px;z-index:100;
+ opacity:0;visibility:hidden;pointer-events:none;
+ transform:translate(-30px,-50%);
+ transition:opacity .5s,transform .5s,visibility .5s
+}
+#phonePanel.visible{
+ opacity:1;visibility:visible;pointer-events:auto;
+ transform:translate(0,-50%)
+}
+#phonePanel .phone{
+ position:relative;width:100%;height:100%;
+ border:9px solid #222;border-radius:35px;
+ background:white;box-shadow:0 18px 50px #0004;
+ overflow:hidden;transition:filter 2s ease
+}
+#home{
+ position:absolute;inset:0;z-index:10;
+ background:linear-gradient(150deg,#fff0f5,#f7d8e5);
+ text-align:center;padding:55px 18px 20px
+}
+.clock{font-size:43px;font-weight:300;color:#333}
+#home p{
+ margin-top:12px;color:#555;
+ font-size:14px;letter-spacing:3px
+}
+.gridA{
+ display:grid;grid-template-columns:repeat(4,1fr);
+ gap:10px;margin-top:65px
+}
+#phonePanel .app{
+ width:48px;height:48px;display:grid;place-items:center;
+ background:white;border:0;border-radius:13px;
+ font-size:27px;font-style:normal;box-shadow:0 3px 9px #0001
+}
+#phonePanel .app.a{
+ background:linear-gradient(135deg,#fd9bbd,#f24f83);
+ color:white
+}
+#phonePanel .app.b{background:#222;color:white}
+#hh{display:none}
+#phonePanel .top{
+ height:49px;display:flex;align-items:center;
+ justify-content:space-between;padding:0 14px;
+ font-size:19px;font-weight:bold;
+ border-bottom:1px solid #eee;background:white;
+ position:relative;z-index:2
+}
+#stat{font-size:14px;color:#ff5c8b}
+#feed{
+ height:calc(100% - 101px);overflow-y:auto;
+ overscroll-behavior:contain;scrollbar-width:thin;
+ background:white
+}
+
+/* SOCIAL POSTS */
+
+.post{
+ padding-bottom:15px;border-bottom:1px solid #eee;
+ background:white
+}
+.postHeader{
+ display:flex;align-items:center;gap:9px;
+ padding:12px 13px;font-size:12px;font-weight:bold
+}
+.avatar{
+ width:29px;height:29px;background:#ffc9da;
+ border-radius:50%;display:grid;place-items:center
+}
+.postImage{
+ height:230px;position:relative;overflow:hidden;
+ display:flex;align-items:center;justify-content:center;
+ font-size:65px;cursor:pointer
+}
+.postActions{
+ display:flex;gap:13px;padding:10px 14px;align-items:center
+}
+.likeButton{
+ border:0;background:transparent;font-size:26px;
+ line-height:1;color:#333;transition:transform .2s
+}
+.likeButton.liked{color:#ff477c;transform:scale(1.22)}
+.postLikes{font-size:12px;font-weight:bold;padding:0 14px}
+.postCaption{
+ font-size:12px;line-height:1.6;padding:7px 14px;color:#333
+}
+.bigLike{
+ position:absolute;left:50%;top:50%;
+ transform:translate(-50%,-50%) scale(.15);
+ color:#ff3c79;font-size:115px;pointer-events:none;
+ z-index:5;animation:bigHeart .9s ease-out forwards
+}
+@keyframes bigHeart{
+ 0%{transform:translate(-50%,-50%) scale(.15);opacity:0}
+ 32%{transform:translate(-50%,-50%) scale(1.5);opacity:1}
+ 60%{transform:translate(-50%,-50%) scale(1.1);opacity:1}
+ 100%{transform:translate(-50%,-90%) scale(1.7);opacity:0}
+}
+.flyingHeart{
+ position:absolute;pointer-events:none;
+ z-index:6;color:#ff4f86;font-size:22px
+}
+
+/* HEART RAIN */
+
+.rainPost{
+ background:white;border-bottom:1px solid #eee;
+ padding-bottom:13px
+}
+.rainTitle{padding:12px 13px;font-weight:bold;font-size:13px}
+.rainGame{
+ position:relative;height:250px;overflow:hidden;
+ background:linear-gradient(160deg,#ff94b8,#f64f91)
+}
+.rainScore{
+ position:absolute;left:12px;top:10px;font-size:14px;
+ color:white;font-weight:bold;z-index:4
+}
+.rainTip{
+ position:absolute;left:0;right:0;bottom:12px;
+ text-align:center;font-size:11px;color:white;
+ pointer-events:none;z-index:4
+}
+.rainHeart{
+ position:absolute;top:-45px;background:transparent;
+ border:0;color:white;font-size:29px;z-index:3;
+ line-height:1;animation:fallDown linear forwards
+}
+.rainHeart.gold{color:#ffe75d;text-shadow:0 0 12px #fff4a9}
+.rainHeart.bad{color:#191919;text-shadow:0 0 3px #fff}
+@keyframes fallDown{
+ from{transform:translateY(-30px) rotate(-15deg)}
+ to{transform:translateY(350px) rotate(25deg)}
+}
+.rainStart{
+ position:absolute;top:50%;left:50%;
+ transform:translate(-50%,-50%);padding:12px 20px;
+ white-space:nowrap;border:0;border-radius:20px;
+ background:white;color:#ec4e86;font-weight:bold;
+ font-size:12px;z-index:5
+}
+.rainMessage{
+ position:absolute;left:0;right:0;top:50%;
+ transform:translateY(-50%);text-align:center;
+ color:white;font-weight:bold;font-size:22px;
+ pointer-events:none;z-index:4
+}
+.rainEnd{
+ padding:11px 13px;font-size:12px;
+ text-align:center;color:#e04c81
+}
+
+/* INTERACTIVE CARDS */
+
+.interactiveCard{
+ background:white;border-bottom:1px solid #eee;
+ padding:14px 13px 17px
+}
+.cardLabel{
+ font-size:10px;font-weight:bold;color:#ef598b;
+ letter-spacing:2px;margin-bottom:8px
+}
+.cardTitle{
+ font-size:15px;font-weight:bold;color:#242424;
+ line-height:1.5;margin-bottom:12px
+}
+.pollOption{
+ position:relative;width:100%;min-height:44px;
+ border:1px solid #f1bed0;border-radius:12px;
+ background:#fff6f9;margin:5px 0;text-align:left;
+ padding:10px 12px;overflow:hidden;color:#343034;
+ font-size:12px;font-weight:bold
+}
+.pollOption:disabled{cursor:default;color:#343034}
+.pollFill{
+ position:absolute;left:0;top:0;bottom:0;width:0;
+ background:#ffbfd4;transition:width .8s ease
+}
+.pollOptionText{
+ position:relative;z-index:1;display:flex;
+ justify-content:space-between;gap:8px
+}
+.cardSmall{
+ font-size:11px;color:#9d8390;margin-top:10px;line-height:1.5
+}
+.choiceScene{
+ height:115px;background:linear-gradient(135deg,#ffe3ed,#ffb9d2);
+ border-radius:15px;display:flex;align-items:center;
+ justify-content:center;font-size:48px;margin:10px 0
+}
+.choiceButtons{
+ display:grid;grid-template-columns:1fr 1fr;gap:8px
+}
+.choiceButton{
+ border:1px solid #f2acc4;background:#fff2f7;
+ border-radius:12px;padding:10px 5px;font-size:12px;
+ font-weight:bold;color:#343034;min-height:46px
+}
+.choiceButton:active{transform:scale(.96)}
+.choiceCount{
+ font-size:11px;color:#bd6b88;
+ text-align:center;margin-top:10px
+}
+
+/* NOTIFICATION */
+
+#socialToast{
+ position:absolute;left:9px;right:9px;top:55px;z-index:20;
+ padding:12px;background:#fff;border:1px solid #f1c7d5;
+ border-radius:16px;box-shadow:0 7px 20px #0002;
+ opacity:0;visibility:hidden;transform:translateY(-15px);
+ transition:.35s;cursor:pointer
+}
+#socialToast.show{
+ opacity:1;visibility:visible;transform:translateY(0)
+}
+#socialToast strong{
+ display:block;color:#f25386;font-size:12px;margin-bottom:4px
+}
+#socialToast span{
+ font-size:12px;color:#444;line-height:1.45
+}
+#socialToast small{
+ display:block;text-align:right;color:#b0a0a8;
+ margin-top:6px;font-size:10px
+}
+#phonePanel nav{
+ position:absolute;bottom:0;left:0;height:52px;width:100%;
+ display:flex;align-items:center;justify-content:space-around;
+ background:white;border-top:1px solid #eee;
+ font-size:24px;z-index:3
+}
+
+/* AGE EFFECTS */
+
+#phonePanel.phase-adult .phone{filter:saturate(.65)}
+#phonePanel.phase-elderly .phone{filter:saturate(.25)}
+#phonePanel.phase-dead .phone{
+ filter:grayscale(1) contrast(1.12)
+}
+#phonePanel.phase-adult .top{background:#f8eff3}
+#phonePanel.phase-elderly .top{background:#e2dfe1}
+#phonePanel.phase-dead .top{background:#272727;color:white}
+#phonePanel.phase-dead #stat{color:white}
+#phonePanel.phase-dead #feed{background:#ddd}
+#phonePanel.phase-dead .interactiveCard,
+#phonePanel.phase-dead .post,
+#phonePanel.phase-dead .rainPost{background:#f2f2f2}
+#phonePanel.phase-dead #socialToast{
+ background:#292929;border-color:#777
+}
+#phonePanel.phase-dead #socialToast strong,
+#phonePanel.phase-dead #socialToast span{color:white}
+
+.timePost{
+ padding:19px 13px;text-align:center;
+ background:linear-gradient(145deg,#fcdfeb,#f7c4d7);
+ border-bottom:1px solid #eee
+}
+.timePost b{
+ display:block;font-size:17px;margin-bottom:8px;color:#2d262a
+}
+.timePost p{font-size:12px;color:#775967;line-height:1.7}
+.timePost.dark{background:#272727}
+.timePost.dark b,.timePost.dark p{color:#eee}
+.rewardPop{
+ position:absolute;left:50%;top:50%;z-index:7;
+ color:white;font-size:23px;font-weight:bold;
+ pointer-events:none
+}
+
+@media(max-width:800px){
+ #logoBox{width:78vw}
+ .people{gap:20px}
+ .person img{width:42vw;height:200px}
+ .person b{font-size:18px}
+ #note{width:75vw}
+ #phonePanel{left:8%;width:230px;height:445px}
+ #home{padding-top:38px}
+ .clock{font-size:33px}
+ .gridA{gap:5px;margin-top:45px}
+ #phonePanel .app{width:40px;height:40px}
+ .postImage{height:170px}
+}
+
+/* ======================================
+   INTERACTIVE SKELETON DISCO
+====================================== */
+
+#danceScene{
+ position:fixed;inset:0;z-index:1100;
+ display:none;overflow:hidden;
+ background:transparent;cursor:none;
+ touch-action:none
+}
+#danceScene.on{display:block}
+
+/* Dark room */
+
+#discoDarkness{
+ position:absolute;inset:0;pointer-events:none;
+ background:rgba(0,0,0,.45);
+ animation:discoDarkFlicker .6s steps(2) infinite
+}
+@keyframes discoDarkFlicker{
+ 0%,100%{background:rgba(0,0,0,.46)}
+ 35%{background:rgba(0,0,0,.15)}
+ 65%{background:rgba(0,0,0,.57)}
+}
+
+/* Colored lights */
+
+#discoLights{
+ position:absolute;inset:0;pointer-events:none;
+ mix-blend-mode:screen;
+ animation:discoColors .8s steps(1) infinite
+}
+@keyframes discoColors{
+ 0%{
+  background:
+   radial-gradient(ellipse at 20% 20%,#ff0088bb,transparent 36%),
+   radial-gradient(ellipse at 80% 80%,#00c8ffbb,transparent 42%);
+ }
+ 25%{
+  background:
+   radial-gradient(ellipse at 75% 15%,#28ff83bb,transparent 38%),
+   radial-gradient(ellipse at 20% 80%,#a500ffbb,transparent 42%);
+ }
+ 50%{
+  background:
+   radial-gradient(ellipse at 55% 65%,#ff00ccbb,transparent 43%),
+   radial-gradient(ellipse at 10% 10%,#ffe14bbb,transparent 35%);
+ }
+ 75%{
+  background:
+   radial-gradient(ellipse at 10% 75%,#00f0ffbb,transparent 37%),
+   radial-gradient(ellipse at 90% 25%,#fd3b63bb,transparent 40%);
+ }
+ 100%{
+  background:
+   radial-gradient(ellipse at 80% 65%,#852bffbb,transparent 42%),
+   radial-gradient(ellipse at 35% 15%,#0cff7bbb,transparent 38%);
+ }
+}
+
+/* Gentle disco flashes */
+
+#discoFlash{
+ position:absolute;inset:0;pointer-events:none;
+ background:white;opacity:0;
+ animation:discoStrobe 1.3s steps(1) infinite
+}
+@keyframes discoStrobe{
+ 0%,100%{opacity:0}
+ 12%{opacity:.12}
+ 14%{opacity:0}
+ 49%{opacity:.09}
+ 51%{opacity:0}
+ 80%{opacity:.14}
+ 82%{opacity:0}
+}
+
+/* All dancing skeletons */
+
+.dancingSkeleton{
+ position:absolute;
+ height:220px;
+ width:auto;
+ max-width:none;
+ object-fit:contain;
+ transform:translate(-50%,-100%);
+ transform-origin:bottom center;
+ pointer-events:none;
+ user-select:none;
+ filter:drop-shadow(0 0 12px #ff4ebcaa);
+ animation:danceGlow .65s steps(2) infinite
+}
+
+@keyframes danceGlow{
+ 0%,100%{
+  filter:
+   drop-shadow(0 0 9px #ff2bbbaa)
+   drop-shadow(0 0 19px #9e26ff88)
+ }
+ 33%{
+  filter:
+   drop-shadow(0 0 10px #00edffcc)
+   drop-shadow(0 0 20px #2d6aff88)
+ }
+ 66%{
+  filter:
+   drop-shadow(0 0 10px #47ff8acc)
+   drop-shadow(0 0 18px #fff16a88)
+ }
+}
+
+/* Main skeleton follows mouse */
+
+#danceLeader{
+ z-index:15;
+ transition:left .12s linear,top .12s linear
+}
+
+/* Copied skeletons stay where clicked */
+
+.danceClone{
+ z-index:10;
+ animation:
+  danceGlow .65s steps(2) infinite,
+  cloneBounce .35s ease-in-out infinite alternate
+}
+
+@keyframes cloneBounce{
+ from{transform:translate(-50%,-100%) rotate(-4deg)}
+ to{transform:translate(-50%,calc(-100% - 8px)) rotate(4deg)}
+}
+
+/* Custom mouse during dance */
+
+#danceCursor{
+ position:absolute;left:50%;top:50%;
+ width:25px;height:25px;
+ border:2px solid white;border-radius:50%;
+ transform:translate(-50%,-50%);
+ pointer-events:none;z-index:40;
+ box-shadow:0 0 12px #ff55cc
+}
+#danceCursor:after{
+ content:"+";position:absolute;inset:0;
+ display:grid;place-items:center;
+ color:white;font-size:15px
+}
+
+/* Counter */
+
+#danceCounter{
+ position:absolute;right:32px;top:30px;
+ color:white;font-size:23px;
+ font-weight:bold;letter-spacing:3px;
+ z-index:35;text-shadow:0 0 12px #ff4ebc
+}
+
+#danceInstruction{
+ position:absolute;bottom:30px;left:0;right:0;
+ text-align:center;color:white;
+ font-size:12px;letter-spacing:4px;z-index:35;
+ pointer-events:none
+}
+
+/* ======================================
+   ENDING
+====================================== */
+
+#ending{
+ position:fixed;inset:0;z-index:1200;
+ background:transparent;display:none;
+ overflow:hidden;color:white;pointer-events:none
+}
+#ending.on{display:block;pointer-events:auto}
+#blackCurtain{
+ position:absolute;inset:0;background:#000;
+ opacity:0;transition:opacity .08s linear
+}
+#blackCurtain.full{opacity:1}
+#endingMessage{
+ position:absolute;inset:0;display:flex;
+ align-items:center;justify-content:center;
+ text-align:center;font-family:Georgia,serif;
+ font-size:clamp(20px,3.2vw,48px);
+ letter-spacing:.12em;padding:25px;
+ opacity:0;transition:opacity 1.2s ease;
+ pointer-events:none
+}
+#endingMessage.visible{opacity:1}
+
+/* GRAVEYARD */
+
+#graveScene{
+ position:absolute;inset:0;display:none;
+ overflow:hidden;background:#000;cursor:pointer
+}
+#graveScene.visible{display:block}
+.grave{
+ position:absolute;width:clamp(88px,21vw,290px);
+ height:auto;object-fit:contain;cursor:pointer;
+ opacity:0;transform:translate(-50%,-100%) scale(0);
+ transform-origin:bottom center;
+ animation:graveFade 1.5s ease forwards;
+ filter:grayscale(1);
+ user-select:none;-webkit-user-drag:none
+}
+.grave.center{
+ width:var(--first-grave-width,115px);
+ z-index:3;animation:firstGraveFade 2.8s ease forwards
+}
+@keyframes graveFade{
+ from{
+  opacity:0;
+  transform:translate(-50%,-100%) scale(.5)
+ }
+ to{
+  opacity:1;
+  transform:translate(-50%,-100%) scale(var(--grave-scale,1))
+ }
+}
+@keyframes firstGraveFade{
+ from{
+  opacity:0;
+  transform:translate(-50%,-100%) scale(.9)
+ }
+ to{
+  opacity:1;
+  transform:translate(-50%,-100%) scale(1)
+ }
+}
+</style>
+</head>
+
+<body>
+
+<!-- WELCOME -->
+
+<section id="welcome" class="page on">
+ <div id="logoBox">
+  <img src="welcome.png" alt="ONE MORE SCROLL">
+ </div>
+ <div id="startHint">CLICK</div>
+</section>
+
+<!-- CHARACTER SELECT -->
+
+<section id="select" class="page">
+ <h1>CHOOSE YOUR CHARACTER</h1>
+ <div class="people">
+  <div class="person" id="girl" data-gender="girl">
+   <img src="girl_normal.png" alt="Girl">
+   <b>GIRL</b>
+  </div>
+  <div class="person" id="boy" data-gender="boy">
+   <img src="boy_normal.png" alt="Boy">
+   <b>BOY</b>
+  </div>
+ </div>
+</section>
+
+<!-- NAME -->
+
+<section id="namePage" class="page">
+ <h1>WHAT'S YOUR NAME?</h1>
+ <input id="nameInput" maxlength="20" placeholder="Your name">
+ <button id="go">CONTINUE</button>
+</section>
+
+<!-- ROOM -->
+
+<section id="main" class="page">
+ <div id="track">
+  <img id="bg" src="background.png" alt="Room">
+  <div id="bedHotspot"></div>
+  <div id="ringFx">
+   <span class="ringLine"></span>
+   <span class="ringLine"></span>
+   <span class="ringLine"></span>
+  </div>
+  <div id="phoneHint" class="hint">CLICK</div>
+  <img id="walker" alt="Character">
+  <div id="sofaHint" class="hint">CLICK</div>
+  <div id="sofaHotspot"></div>
+ </div>
+
+ <div id="note">
+  <div id="noteIcon">♥</div>
+  <div id="noteText"></div>
+ </div>
+
+ <!-- SCROLLGRAM PHONE -->
+
+ <div id="phonePanel">
+  <div class="phone" id="phone">
+   <div id="home">
+    <div class="clock">10:24</div>
+    <p>Social Media</p>
+    <div class="gridA">
+     <button id="appA" class="app a">◎<img id="hh" alt=""></button>
+     <button class="app b">♪</button>
+     <i class="app"></i>
+     <i class="app"></i>
+    </div>
+   </div>
+
+   <div class="top">
+    scrollgram
+    <span id="stat">♥ 0</span>
+   </div>
+
+   <div id="feed"></div>
+
+   <div id="socialToast">
+    <strong>NEW NOTIFICATION ♥</strong>
+    <span id="socialToastText"></span>
+    <small>TAP TO OPEN</small>
+   </div>
+
+   <nav>
+    <span>⌂</span>
+    <span>⌕</span>
+    <span>＋</span>
+    <span>♡</span>
+    <span>◉</span>
+   </nav>
+  </div>
+ </div>
+</section>
+
+<!-- INTERACTIVE DISCO -->
+
+<section id="danceScene">
+ <div id="discoDarkness"></div>
+ <div id="discoLights"></div>
+ <div id="discoFlash"></div>
+
+ <div id="danceSkeletons">
+  <img
+   id="danceLeader"
+   class="dancingSkeleton"
+   src="dance1.png"
+   alt="Dancing skeleton"
+  >
+ </div>
+
+ <div id="danceCounter">1 / 10</div>
+ <div id="danceInstruction">
+  MOVE YOUR MOUSE · CLICK TO MULTIPLY
+ </div>
+ <div id="danceCursor"></div>
+</section>
+
+<!-- ENDING -->
+
+<section id="ending">
+ <div id="blackCurtain"></div>
+ <div id="endingMessage">
+  YOUR SCROLLING TIME IS OVER
+ </div>
+ <div id="graveScene"></div>
+</section>
+
+<div id="cursorPhone"></div>
+<div id="glow"></div>
+
+<!-- SOUNDS -->
+
+<audio id="ding"
+ src="notification.mp3" preload="auto"></audio>
+
+<audio id="steps"
+ src="walkingsound.mp3" preload="auto" loop></audio>
+
+<audio id="danceMusic"
+ src="music.mp3" preload="auto" loop></audio>
+
+<audio id="churchSound"
+ src="church_bell.mp3" preload="auto"></audio>
+
+<audio id="crowSound"
+ src="crow.mp3" preload="auto"></audio>
+
+<script>
+const $=id=>document.getElementById(id);
+
+let page="welcome";
+let selected="";
+let playerName="";
+let busy=false;
+
+let states={girl:"normal",boy:"normal"};
+
+let noteCount=0;
+let noteLoop;
+let phoneClicked=false;
+let canScroll=false;
+let satDown=false;
+let scrollX=0;
+let walkFrame=0;
+let lastSwap=0;
+let stopStepsTimer;
+
+let totalLikes=0;
+let postNumber=0;
+let activeRain=null;
+let feedItemCount=0;
+let pollNumber=0;
+let choiceNumber=0;
+let toastTimer=null;
+let toastLoop=null;
+let socialOpen=false;
+let socialPhase="young";
+let lastAgePhase="";
+let totalInteractions=0;
+
+let endingStarted=false;
+let skeletonLocation=null;
+let graveClicks=0;
+
+/* ======================================
+   DANCE SETTINGS
+====================================== */
+
+const DANCE_FRAME_SPEED=190;
+const MAX_SKELETONS=10;
+
+const danceFrames=[
+ "dance1.png",
+ "dance2.png",
+ "dance3.png",
+ "dance4.png",
+ "dance5.png",
+ "dance6.png"
+];
+
+let danceInterval=null;
+let danceFrame=0;
+let danceCount=1;
+let danceActive=false;
+let danceMouseX=0;
+let danceMouseY=0;
+let danceSkeletonHeight=220;
+let endingSequenceStarted=false;
+
+/* ======================================
+   CHARACTER POSES - UNCHANGED
+====================================== */
+
+const POSE_SCROLL_DISTANCE=800;
+const AGING_FADE_DURATION=2400;
+
+const girlPoseSettings=[
+ {file:"girl_pose_02_lean_scroll.png",left:.902,height:23.21,bottom:29},
+ {file:"girl_pose_04_curl_side.png",left:.885,height:26.62,bottom:26},
+ {file:"girl_pose_06_hug_knees.png",left:.907,height:20.49,bottom:29},
+ {file:"girl_pose_07_face_down_tired.png",left:.885,height:27.6,bottom:22},
+ {file:"girl_pose_02_lean_scroll.png",left:.902,height:23.21,bottom:29},
+ {file:"girl_adult.png",left:.902,height:23.21,bottom:29},
+ {file:"girl_elderly.png",left:.902,height:23.21,bottom:29},
+ {file:"girl_die.png",left:.902,height:22.05,bottom:29}
+];
+
+const boyPoseSettings=[
+ {file:"boy_pose_02_lean_scroll.png",left:.902,height:23.21,bottom:29},
+ {file:"boy_pose_04_curl_side.png",left:.885,height:26.62,bottom:26},
+ {file:"boy_pose_06_hug_knees.png",left:.907,height:20.49,bottom:29},
+ {file:"boy_pose_07_face_down_tired.png",left:.885,height:27.6,bottom:22},
+ {file:"boy_pose_02_lean_scroll.png",left:.902,height:23.21,bottom:29},
+ {file:"boy_adult.png",left:.902,height:22.05,bottom:29},
+ {file:"boy_elderly.png",left:.902,height:23.21,bottom:29},
+ {file:"boy_die.png",left:.902,height:22.05,bottom:29}
+];
+
+let poseStep=-1;
+let poseAnchor=0;
+let poseLoading=false;
+let poseSession=0;
+let poseErrorFile="";
+let sittingReady=false;
+
+function getSelectedPoses(){
+ return selected==="boy"?boyPoseSettings:girlPoseSettings;
+}
+
+function styleCharacterImage(element,pose){
+ element.style.transition="none";
+ element.style.transform="none";
+ element.style.left=$("track").scrollWidth*pose.left+"px";
+ element.style.height=pose.height+"%";
+ element.style.width="auto";
+ element.style.bottom=pose.bottom+"%";
+}
+
+function applyCharacterPose(pose){
+ const walker=$("walker");
+ walker.src=pose.file;
+ styleCharacterImage(walker,pose);
+}
+
+function regularPoseFade(pose,session,index){
+ const walker=$("walker");
+
+ const fadeOut=walker.animate(
+  [{opacity:1},{opacity:0}],
+  {duration:400,easing:"ease-in-out",fill:"forwards"}
+ );
+
+ fadeOut.onfinish=()=>{
+  if(session!==poseSession)return;
+
+  fadeOut.cancel();
+  walker.style.opacity="0";
+  applyCharacterPose(pose);
+
+  const fadeIn=walker.animate(
+   [{opacity:0},{opacity:1}],
+   {duration:600,easing:"ease-in-out",fill:"forwards"}
+  );
+
+  fadeIn.onfinish=()=>{
+   if(session!==poseSession)return;
+   fadeIn.cancel();
+   walker.style.opacity="1";
+   finishPoseChange(index);
+  };
+ };
+}
+
+function agingCrossfade(pose,session,index){
+ const walker=$("walker");
+ const incoming=document.createElement("img");
+
+ incoming.src=pose.file;
+ incoming.alt="";
+ incoming.className="ageOverlay";
+ incoming.style.position="absolute";
+ incoming.style.display="block";
+ incoming.style.pointerEvents="none";
+ incoming.style.userSelect="none";
+ incoming.style.zIndex="23";
+ incoming.style.opacity="0";
+
+ styleCharacterImage(incoming,pose);
+ $("track").appendChild(incoming);
+
+ const outgoingAnimation=walker.animate(
+  [{opacity:1},{opacity:0}],
+  {
+   duration:AGING_FADE_DURATION,
+   easing:"ease-in-out",
+   fill:"forwards"
+  }
+ );
+
+ const incomingAnimation=incoming.animate(
+  [{opacity:0},{opacity:1}],
+  {
+   duration:AGING_FADE_DURATION,
+   easing:"ease-in-out",
+   fill:"forwards"
+  }
+ );
+
+ incomingAnimation.onfinish=()=>{
+  if(session!==poseSession){
+   incoming.remove();
+   outgoingAnimation.cancel();
+   incomingAnimation.cancel();
+   return;
+  }
+
+  walker.style.opacity="0";
+  applyCharacterPose(pose);
+
+  outgoingAnimation.cancel();
+  incomingAnimation.cancel();
+
+  walker.style.opacity="1";
+  incoming.remove();
+
+  finishPoseChange(index);
+ };
+}
+
+function finishPoseChange(index){
+ poseStep=index;
+ poseAnchor=$("feed").scrollTop;
+ poseLoading=false;
+
+ updateSocialAge(index);
+
+ if(index===7&&!endingStarted){
+  setTimeout(startSkeletonDance,1400);
+ }
+}
+
+function changeCharacterPose(index){
+ const settings=getSelectedPoses();
+
+ if(
+  !satDown ||
+  !sittingReady ||
+  poseLoading ||
+  index<=poseStep ||
+  index>=settings.length
+ )return;
+
+ poseLoading=true;
+
+ const session=poseSession;
+ const pose=settings[index];
+ const preload=new Image();
+
+ preload.onerror=()=>{
+  if(session!==poseSession)return;
+  poseLoading=false;
+  poseAnchor=$("feed").scrollTop;
+
+  console.error("Cannot load:",pose.file);
+
+  if(poseErrorFile!==pose.file){
+   poseErrorFile=pose.file;
+   alert("IMAGE NOT FOUND!\n\n"+pose.file);
+  }
+ };
+
+ preload.onload=()=>{
+  if(session!==poseSession||!satDown)return;
+
+  if(index>=5)agingCrossfade(pose,session,index);
+  else regularPoseFade(pose,session,index);
+ };
+
+ preload.src=pose.file;
+}
+
+function checkPoseProgress(){
+ if(
+  !satDown ||
+  !sittingReady ||
+  poseLoading ||
+  $("home").style.display!=="none"
+ )return;
+
+ const nextIndex=poseStep+1;
+ if(nextIndex>=getSelectedPoses().length)return;
+
+ const distance=$("feed").scrollTop-poseAnchor;
+
+ if(distance>=POSE_SCROLL_DISTANCE){
+  changeCharacterPose(nextIndex);
+ }
+}
+
+function updateSocialAge(index){
+ let phase="young";
+
+ if(index>=7)phase="dead";
+ else if(index>=6)phase="elderly";
+ else if(index>=5)phase="adult";
+
+ socialPhase=phase;
+
+ $("phonePanel").classList.remove(
+  "phase-adult","phase-elderly","phase-dead"
+ );
+
+ if(phase!=="young"){
+  $("phonePanel").classList.add("phase-"+phase);
+ }
+
+ if(phase!==lastAgePhase){
+  lastAgePhase=phase;
+
+  if(phase==="adult"){
+   appendSpecialMessage(
+    "TIME IS PASSING",
+    "Another year. Another scroll."
+   );
+   showSocialToast("You have 23 new notifications!");
+  }
+
+  if(phase==="elderly"){
+   appendSpecialMessage(
+    "REMEMBER THIS?",
+    "You posted this 30 years ago."
+   );
+   showSocialToast("A memory from many years ago...");
+  }
+
+  if(phase==="dead"){
+   appendSpecialMessage(
+    "YOU REACHED THE END",
+    "But the feed never ends.",
+    true
+   );
+   showSocialToast("Someone just liked your photo.");
+  }
+ }
+}
+
+/* ======================================
+   PAGE CONTROL
+====================================== */
+
+function show(id){
+ document.querySelectorAll(".page").forEach(p=>{
+  p.classList.remove("on");
+ });
+
+ $(id).classList.add("on");
+ page=id;
+
+ const fake=["welcome","select"].includes(id);
+
+ $("cursorPhone").style.display=fake?"block":"none";
+ document.body.style.cursor=fake?"none":"default";
+}
+
+document.addEventListener("mousemove",e=>{
+ $("cursorPhone").style.left=e.clientX+"px";
+ $("cursorPhone").style.top=e.clientY+"px";
+ $("glow").style.left=e.clientX+"px";
+ $("glow").style.top=e.clientY+"px";
+
+ if(page==="welcome"){
+  $("logoBox").style.transform=
+   `translate(${(e.clientX-innerWidth/2)/45}px,${(e.clientY-innerHeight/2)/35}px)`;
+
+  const r=$("logoBox").getBoundingClientRect();
+
+  $("glow").style.opacity=
+   e.clientX>r.left &&
+   e.clientX<r.right &&
+   e.clientY>r.top &&
+   e.clientY<r.bottom?1:0;
+
+ }else if(page==="select"&&!busy){
+  let hit=false;
+
+  ["girl","boy"].forEach(id=>{
+   const el=$(id);
+   const r=el.getBoundingClientRect();
+
+   const d=Math.hypot(
+    e.clientX-r.left-r.width/2,
+    e.clientY-r.top-r.height*.42
+   );
+
+   const mood=d<220?"scared":"normal";
+
+   if(states[id]!==mood){
+    states[id]=mood;
+    el.querySelector("img").src=id+"_"+mood+".png";
+    el.classList.toggle("scared",mood==="scared");
+   }
+
+   if(d<220)hit=true;
+  });
+
+  $("glow").style.opacity=hit?1:0;
+ }else{
+  $("glow").style.opacity=0;
+ }
+});
+
+$("welcome").onclick=()=>show("select");
+
+/* HEART EXPLOSION */
+
+function explodeHearts(x,y){
+ for(let i=0;i<160;i++){
+  const h=document.createElement("span");
+
+  h.className="heart";
+  h.textContent="♥";
+  h.style.left=x+"px";
+  h.style.top=y+"px";
+  h.style.fontSize=14+Math.random()*34+"px";
+
+  h.style.color=[
+   "#ff174f","#ff4169","#ff7798","#ffabc0"
+  ][Math.random()*4|0];
+
+  document.body.appendChild(h);
+
+  const a=Math.random()*Math.PI*2;
+  const d=90+Math.random()*Math.max(innerWidth,innerHeight)*.7;
+  const dx=Math.cos(a)*d;
+  const dy=Math.sin(a)*d;
+
+  h.animate([
+   {transform:"translate(-50%,-50%) scale(.25)",opacity:1},
+   {
+    transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`,
+    opacity:0
+   }
+  ],{
+   duration:1100+Math.random()*900,
+   fill:"forwards"
+  }).onfinish=()=>h.remove();
+ }
+}
+
+/* SELECT */
+
+document.querySelectorAll(".person").forEach(card=>{
+ card.onclick=()=>{
+  if(busy)return;
+
+  busy=true;
+  selected=card.dataset.gender;
+
+  card.classList.remove("scared");
+  card.querySelector("img").src=selected+"_skeleton.png";
+
+  document.querySelectorAll(".person").forEach(p=>{
+   if(p!==card)p.classList.add("fade");
+  });
+
+  const r=card.getBoundingClientRect();
+
+  explodeHearts(
+   r.left+r.width/2,
+   r.top+r.height/2
+  );
+
+  setTimeout(()=>{
+   show("namePage");
+   $("nameInput").focus();
+  },2100);
+ };
+});
+
+function enterRoom(){
+ playerName=$("nameInput").value.trim();
+
+ if(!playerName){
+  $("nameInput").focus();
+  return;
+ }
+
+ show("main");
+ initRoom();
+}
+
+$("go").onclick=enterRoom;
+
+$("nameInput").onkeydown=e=>{
+ if(e.key==="Enter")enterRoom();
+};
+
+/* ======================================
+   INITIALIZATION
+====================================== */
+
+function initRoom(){
+ clearInterval(noteLoop);
+ clearInterval(toastLoop);
+ clearTimeout(toastTimer);
+ clearInterval(danceInterval);
+
+ noteCount=0;
+ phoneClicked=false;
+ canScroll=false;
+ satDown=false;
+ scrollX=0;
+ walkFrame=0;
+
+ socialOpen=false;
+ socialPhase="young";
+ lastAgePhase="";
+ totalLikes=0;
+ totalInteractions=0;
+
+ endingStarted=false;
+ endingSequenceStarted=false;
+ graveClicks=0;
+ skeletonLocation=null;
+
+ danceActive=false;
+ danceFrame=0;
+ danceCount=1;
+
+ $("danceScene").classList.remove("on");
+
+ $("danceSkeletons").replaceChildren();
+
+ const leader=document.createElement("img");
+ leader.id="danceLeader";
+ leader.className="dancingSkeleton";
+ leader.src="dance1.png";
+ leader.alt="Dancing skeleton";
+ $("danceSkeletons").append(leader);
+
+ $("danceCounter").textContent="1 / 10";
+
+ $("danceMusic").pause();
+ $("danceMusic").currentTime=0;
+
+ $("ending").classList.remove("on");
+ $("blackCurtain").classList.remove("full");
+ $("blackCurtain").style.transition="opacity .08s linear";
+
+ $("graveScene").classList.remove("visible");
+ $("graveScene").replaceChildren();
+
+ $("endingMessage").classList.remove("visible");
+
+ $("churchSound").pause();
+ $("crowSound").pause();
+
+ $("stat").textContent="♥ 0";
+
+ poseSession++;
+ poseStep=-1;
+ poseAnchor=0;
+ poseLoading=false;
+ poseErrorFile="";
+ sittingReady=false;
+
+ $("track").querySelectorAll(".ageOverlay").forEach(e=>e.remove());
+ $("track").style.transform="translateX(0)";
+
+ [
+  "phoneHint","sofaHint","sofaHotspot","walker","ringFx"
+ ].forEach(id=>{
+  $(id).style.display="none";
+ });
+
+ $("walker").style.opacity="1";
+ $("note").classList.remove("show");
+
+ $("phonePanel").classList.remove(
+  "visible","phase-adult","phase-elderly","phase-dead"
+ );
+
+ $("home").style.display="block";
+ $("socialToast").classList.remove("show");
+
+ setTimeout(()=>{
+  if(phoneClicked||page!=="main")return;
+  fireNotification();
+  noteLoop=setInterval(fireNotification,2200);
+ },900);
+}
+
+function fireNotification(){
+ if(phoneClicked||page!=="main")return;
+
+ noteCount++;
+
+ const s=`${noteCount} new notification${noteCount>1?"s":""}`;
+
+ const label=document.createElement("small");
+ label.textContent="NOW";
+
+ const message=document.createElement("div");
+ message.textContent=playerName+", you have "+s+"!";
+
+ $("noteText").replaceChildren(label,message);
+
+ $("ding").currentTime=0;
+ $("ding").play().catch(()=>{});
+
+ $("note").classList.remove("show");
+ void $("note").offsetWidth;
+ $("note").classList.add("show");
+
+ $("ringFx").style.display="block";
+
+ if(noteCount>=3){
+  $("phoneHint").style.display="block";
+ }
+}
+
+/* WALK */
+
+function startCharacter(){
+ if(phoneClicked)return;
+
+ phoneClicked=true;
+ clearInterval(noteLoop);
+
+ $("note").classList.remove("show");
+ $("phoneHint").style.display="none";
+ $("ringFx").style.display="none";
+
+ const w=$("walker");
+
+ w.style.display="block";
+ w.style.transition="none";
+ w.style.transform="none";
+ w.style.height="38.5%";
+ w.style.bottom="13.7%";
+ w.src=selected+"_walk1.png";
+
+ w.style.left=selected==="girl"?"-500px":"-320px";
+
+ const stop=$("track").scrollWidth*
+  (selected==="girl"?.008:.03);
+
+ requestAnimationFrame(()=>{
+  w.style.transition="left 1.2s ease";
+  w.style.left=stop+"px";
+ });
+
+ setTimeout(()=>{
+  w.style.transition="none";
+  w.src=selected+"_walk1.png";
+  canScroll=true;
+ },1300);
+}
+
+$("bedHotspot").onclick=startCharacter;
+$("phoneHint").onclick=startCharacter;
+
+function moveScene(delta){
+ if(!canScroll||satDown)return;
+
+ const max=Math.max(0,$("track").scrollWidth-innerWidth);
+ const prev=scrollX;
+
+ scrollX=Math.max(0,Math.min(max,scrollX+delta));
+
+ if(scrollX===prev)return;
+
+ $("track").style.transform=`translateX(${-scrollX}px)`;
+
+ const p=max?scrollX/max:0;
+ const start=$("track").scrollWidth*
+  (selected==="girl"?.008:.03);
+ const end=$("track").scrollWidth*.865;
+
+ $("walker").style.left=start+(end-start)*p+"px";
+
+ if(performance.now()-lastSwap>170){
+  walkFrame=1-walkFrame;
+  $("walker").src=selected+
+   (walkFrame?"_walk.png":"_walk1.png");
+  lastSwap=performance.now();
+ }
+
+ if($("steps").paused){
+  $("steps").play().catch(()=>{});
+ }
+
+ clearTimeout(stopStepsTimer);
+
+ stopStepsTimer=setTimeout(()=>{
+  $("steps").pause();
+ },150);
+
+ $("sofaHint").style.display=p>.87?"block":"none";
+ $("sofaHotspot").style.display=p>.87?"block":"none";
+}
+
+window.addEventListener("wheel",e=>{
+ if(page!=="main")return;
+
+ if(satDown&&e.target.closest("#phonePanel")){
+  return;
+ }
+
+ e.preventDefault();
+ moveScene(e.deltaY);
+},{passive:false});
+
+/* SIT */
+
+function sitOnSofa(){
+ if(satDown)return;
+
+ satDown=true;
+ canScroll=false;
+
+ $("steps").pause();
+ $("sofaHint").style.display="none";
+ $("sofaHotspot").style.display="none";
+
+ const w=$("walker");
+
+ const fadeOut=w.animate(
+  [{opacity:1},{opacity:0}],
+  {duration:400,easing:"ease-in-out",fill:"forwards"}
+ );
+
+ fadeOut.onfinish=()=>{
+  fadeOut.cancel();
+  w.style.opacity="0";
+
+  applyCharacterPose(getSelectedPoses()[0]);
+
+  const fadeIn=w.animate(
+   [{opacity:0},{opacity:1}],
+   {duration:600,easing:"ease-in-out",fill:"forwards"}
+  );
+
+  fadeIn.onfinish=()=>{
+   w.style.opacity="1";
+   fadeIn.cancel();
+
+   poseStep=0;
+   poseAnchor=$("feed").scrollTop;
+   sittingReady=true;
+  };
+ };
+
+ setTimeout(()=>{
+  $("phonePanel").classList.add("visible");
+  $("home").style.display="block";
+ },500);
+}
+
+$("sofaHotspot").onclick=sitOnSofa;
+$("sofaHint").onclick=sitOnSofa;
+
+/* ======================================
+   SCROLLGRAM
+====================================== */
+
+function make(tag,cls,txt){
+ const el=document.createElement(tag);
+ if(cls)el.className=cls;
+ if(txt!==undefined)el.textContent=txt;
+ return el;
+}
+
+function addLikes(n){
+ totalLikes=Math.max(0,totalLikes+n);
+ $("stat").textContent="♥ "+totalLikes;
+}
+
+function likeExplosion(container){
+ const big=make("span","bigLike","♥");
+ container.append(big);
+
+ setTimeout(()=>big.remove(),950);
+
+ for(let i=0;i<15;i++){
+  const h=make("span","flyingHeart","♥");
+  h.style.left="50%";
+  h.style.top="50%";
+  container.append(h);
+
+  const x=(Math.random()-.5)*220;
+  const y=(Math.random()-.5)*200;
+
+  h.animate([
+   {transform:"translate(-50%,-50%) scale(.3)",opacity:1},
+   {
+    transform:`translate(${x}px,${y}px) scale(${.7+Math.random()*1.8})`,
+    opacity:0
+   }
+  ],{
+   duration:700+Math.random()*550,
+   fill:"forwards"
+  }).onfinish=()=>h.remove();
+ }
+}
+
+const posts=[
+ ["daily.mood","☁️","#e3e8f0","Slow mornings, quiet moments."],
+ ["little.traveler","🌴","#fbe5b4","Wish you were here!"],
+ ["happy.days","🌷","#f8dce8","A little happiness every day."],
+ ["night.walk","🌙","#d7d8e7","The city never sleeps."],
+ ["coffee.time","☕","#eddfd3","Just one more coffee."],
+ ["weekend.fun","🎧","#d9d7f5","My favorite playlist."],
+ ["sweet.life","🍰","#ffebd9","Dessert first!"],
+ ["sunset.club","🌅","#f8d7c9","Golden hour."]
+];
+
+function createPost(){
+ const p=posts[postNumber++%posts.length];
+
+ const article=make("article","post");
+ const header=make("div","postHeader");
+
+ header.append(
+  make("span","avatar","♥"),
+  make("span","",p[0])
+ );
+
+ const photo=make("div","postImage",p[1]);
+ photo.style.background=p[2];
+
+ const actions=make("div","postActions");
+ const like=make("button","likeButton","♡");
+ like.setAttribute("aria-label","Like");
+
+ actions.append(
+  like,
+  make("span","","♧"),
+  make("span","","➤")
+ );
+
+ const countLabel=make("div","postLikes","0 likes");
+ const caption=make("div","postCaption",p[0]+"  "+p[3]);
+
+ let count=0;
+
+ function giveLike(){
+  count++;
+  totalInteractions++;
+  addLikes(1);
+
+  like.classList.add("liked");
+  like.textContent="♥";
+  countLabel.textContent=count+" likes";
+  likeExplosion(photo);
+ }
+
+ like.onclick=giveLike;
+ photo.ondblclick=giveLike;
+
+ article.append(
+  header,photo,actions,countLabel,caption
+ );
+
+ return article;
+}
+
+/* POLLS */
+
+const polls=[
+ {question:"Which one would you choose?",answers:["☕ Coffee","🧋 Bubble Tea"]},
+ {question:"One free day. What would you do?",answers:["😴 Sleep all day","📱 Scroll all day"]},
+ {question:"Which is more important?",answers:["❤️ Love","📶 Wi-Fi"]},
+ {question:"It's 3 AM. What now?",answers:["🌙 Go to sleep","📱 One more reel"]},
+ {question:"Pick your dream weekend",answers:["🏝️ Travel","🛋️ Stay home"]},
+ {question:"What would you save first?",answers:["📷 My photos","🔋 My battery"]}
+];
+
+function createPoll(){
+ const data=polls[pollNumber++%polls.length];
+
+ const card=make("section","interactiveCard");
+ const label=make("div","cardLabel","QUICK POLL ♥");
+ const title=make("div","cardTitle",data.question);
+ const result=make(
+  "div","cardSmall",
+  "Vote to see what everyone thinks."
+ );
+
+ card.append(label,title);
+
+ const buttons=[];
+ const weights=[25+Math.random()*50,0];
+ weights[1]=100-weights[0];
+
+ data.answers.forEach((answer,i)=>{
+  const b=make("button","pollOption");
+  const fill=make("span","pollFill");
+  const content=make("span","pollOptionText");
+  const labelText=make("span","",answer);
+  const percent=make("span","","");
+
+  content.append(labelText,percent);
+  b.append(fill,content);
+  card.append(b);
+
+  buttons.push({b,fill,percent,i});
+
+  b.onclick=()=>{
+   if(b.disabled)return;
+
+   totalInteractions++;
+   addLikes(5);
+
+   buttons.forEach(item=>{
+    item.b.disabled=true;
+    item.fill.style.width=weights[item.i].toFixed(0)+"%";
+    item.percent.textContent=weights[item.i].toFixed(0)+"%";
+   });
+
+   result.textContent="✓ Thanks for voting! +5 hearts";
+  };
+ });
+
+ card.append(result);
+ return card;
+}
+
+/* THIS OR THAT */
+
+const choices=[
+ ["☕","🧋","Coffee","Bubble Tea"],
+ ["🐱","🐶","Cats","Dogs"],
+ ["🌙","☀️","Night","Morning"],
+ ["🍕","🍔","Pizza","Burger"],
+ ["🎧","🎬","Music","Movies"],
+ ["🏖️","🏔️","Beach","Mountains"],
+ ["🍓","🍫","Strawberry","Chocolate"],
+ ["📱","😴","Phone","Sleep"],
+ ["❤️","💰","Love","Money"],
+ ["🎮","📚","Games","Books"]
+];
+
+function createThisOrThat(){
+ const card=make("section","interactiveCard");
+ const label=make("div","cardLabel","THIS OR THAT?");
+ const title=make(
+  "div","cardTitle","Don't think. Just choose!"
+ );
+ const scene=make("div","choiceScene");
+ const options=make("div","choiceButtons");
+ const counter=make("div","choiceCount");
+
+ let round=0;
+ const startAt=choiceNumber++*3;
+
+ function draw(){
+  const pair=choices[(startAt+round)%choices.length];
+
+  scene.textContent=pair[0]+"  VS  "+pair[1];
+  options.replaceChildren();
+
+  [2,3].forEach(index=>{
+   const b=make("button","choiceButton",pair[index]);
+   options.append(b);
+
+   b.onclick=()=>{
+    round++;
+    totalInteractions++;
+    addLikes(2);
+
+    if(round<5){
+     draw();
+    }else{
+     scene.textContent="🎉";
+     title.textContent="You can't stop choosing!";
+     options.replaceChildren();
+
+     const again=make(
+      "button","choiceButton","PLAY AGAIN ♥"
+     );
+
+     again.style.gridColumn="1 / -1";
+
+     again.onclick=()=>{
+      round=0;
+      title.textContent="Don't think. Just choose!";
+      draw();
+     };
+
+     options.append(again);
+     counter.textContent="+10 hearts collected!";
+    }
+   };
+  });
+
+  counter.textContent="CHOICE "+(round+1)+" / 5";
+ }
+
+ draw();
+ card.append(label,title,scene,options,counter);
+
+ return card;
+}
+
+/* HEART RAIN */
+
+function createHeartRain(){
+ const card=make("section","rainPost");
+ const title=make("div","rainTitle","♥ HEART RAIN");
+ const game=make("div","rainGame");
+ const score=make("div","rainScore","♥ 0");
+ const tip=make(
+  "div","rainTip",
+  "Pink +1   Gold +5   Black -3"
+ );
+ const start=make(
+  "button","rainStart","PLAY HEART RAIN ♥"
+ );
+ const message=make("div","rainMessage");
+ const result=make(
+  "div","rainEnd","Catch the hearts!"
+ );
+
+ game.append(score,tip,start,message);
+ card.append(title,game,result);
+
+ let points=0;
+ let timer;
+ let endTimer;
+ let running=false;
+
+ function stop(){
+  if(!running)return;
+
+  running=false;
+  clearInterval(timer);
+  clearTimeout(endTimer);
+
+  game.querySelectorAll(".rainHeart")
+   .forEach(h=>h.remove());
+
+  message.textContent="+"+points+" ♥";
+  result.textContent="You earned "+points+" hearts!";
+  start.textContent="PLAY AGAIN ♥";
+  start.style.display="block";
+
+  if(activeRain===stop)activeRain=null;
+ }
+
+ function drop(){
+  if(!running)return;
+
+  const chance=Math.random();
+  let type="normal";
+  let value=1;
+
+  if(chance<.13){
+   type="gold";
+   value=5;
+  }else if(chance<.29){
+   type="bad";
+   value=-3;
+  }
+
+  const h=make("button","rainHeart "+type,"♥");
+
+  h.style.left=5+Math.random()*85+"%";
+  h.style.fontSize=22+Math.random()*19+"px";
+
+  const seconds=1.3+Math.random()*1.6;
+  h.style.animationDuration=seconds+"s";
+
+  game.append(h);
+
+  h.onclick=()=>{
+   if(!running)return;
+
+   points=Math.max(0,points+value);
+   totalInteractions++;
+   addLikes(value);
+
+   score.textContent="♥ "+points;
+
+   const pop=make(
+    "span","rewardPop",
+    (value>0?"+":"")+value+" ♥"
+   );
+
+   pop.style.color=value<0?"#222":"white";
+   game.append(pop);
+
+   pop.animate([
+    {transform:"translate(-50%,0)",opacity:1},
+    {
+     transform:"translate(-50%,-50px) scale(1.5)",
+     opacity:0
+    }
+   ],{duration:600}).onfinish=()=>pop.remove();
+
+   h.remove();
+  };
+
+  setTimeout(()=>h.remove(),seconds*1000+100);
+ }
+
+ start.onclick=()=>{
+  if(activeRain&&activeRain!==stop)activeRain();
+
+  activeRain=stop;
+  running=true;
+  points=0;
+
+  message.textContent="";
+  score.textContent="♥ 0";
+  result.textContent="Catch the hearts before they disappear!";
+  start.style.display="none";
+
+  drop();
+  timer=setInterval(drop,260);
+  endTimer=setTimeout(stop,15000);
+ };
+
+ return card;
+}
+
+/* TIME POSTS */
+
+function appendSpecialMessage(title,message,dark=false){
+ const card=make(
+  "section","timePost"+(dark?" dark":"")
+ );
+
+ card.append(
+  make("b","",title),
+  make("p","",message)
+ );
+
+ $("feed").append(card);
+}
+
+function makeTimePost(){
+ const card=make("section","timePost");
+ let title="";
+ let message="";
+
+ if(socialPhase==="young"){
+  title="JUST ONE MORE SCROLL";
+  message="Five more minutes won't hurt... right?";
+ }else if(socialPhase==="adult"){
+  title="ANOTHER DAY";
+  message="You've been here longer than you think.";
+ }else if(socialPhase==="elderly"){
+  title="WHERE DID THE TIME GO?";
+  message="Some memories never came back.";
+ }else{
+  title="STILL SCROLLING?";
+  message="Your time ended. The feed didn't.";
+  card.classList.add("dark");
+ }
+
+ card.append(
+  make("b","",title),
+  make("p","",message)
+ );
+
+ return card;
+}
+
+/* INFINITE FEED */
+
+function createFeedItem(){
+ feedItemCount++;
+
+ const position=(feedItemCount-1)%9;
+
+ if(position===2)return createPoll();
+ if(position===4)return createHeartRain();
+ if(position===6)return createThisOrThat();
+ if(position===8)return makeTimePost();
+
+ return createPost();
+}
+
+function appendFeed(){
+ const fragment=document.createDocumentFragment();
+
+ for(let i=0;i<9;i++){
+  fragment.append(createFeedItem());
+ }
+
+ $("feed").append(fragment);
+}
+
+/* SOCIAL NOTIFICATIONS */
+
+const socialNotifications=[
+ "Someone liked your photo! ♥",
+ "You have 10 new followers!",
+ "Your friend posted a new reel!",
+ "Someone mentioned you in a comment!",
+ "Your new post is getting attention!",
+ "A new message is waiting...",
+ "You missed something interesting!",
+ "Come back! Your friends are active!"
+];
+
+const adultNotifications=[
+ "You have 23 unread notifications!",
+ "Don't miss this amazing offer!",
+ "Everyone is talking about this!",
+ "One new video is waiting for you."
+];
+
+const elderlyNotifications=[
+ "A memory from 30 years ago...",
+ "Someone you knew posted an old photo.",
+ "Remember this moment?",
+ "You haven't checked your feed today."
+];
+
+const deadNotifications=[
+ "Someone liked your photo.",
+ "You have a new notification.",
+ "Still here?",
+ "The feed never ends."
+];
+
+function showSocialToast(message){
+ if(!socialOpen)return;
+
+ $("socialToastText").textContent=message;
+ $("socialToast").classList.add("show");
+
+ clearTimeout(toastTimer);
+
+ toastTimer=setTimeout(()=>{
+  $("socialToast").classList.remove("show");
+ },3800);
+}
+
+function randomSocialNotification(){
+ if(!socialOpen||page!=="main"||endingStarted)return;
+
+ let list=socialNotifications;
+
+ if(socialPhase==="adult")list=adultNotifications;
+ else if(socialPhase==="elderly")list=elderlyNotifications;
+ else if(socialPhase==="dead")list=deadNotifications;
+
+ const message=list[Math.random()*list.length|0];
+
+ showSocialToast(message);
+
+ if(socialPhase!=="dead"){
+  $("ding").currentTime=0;
+  $("ding").play().catch(()=>{});
+ }
+}
+
+$("socialToast").onclick=()=>{
+ $("socialToast").classList.remove("show");
+
+ totalInteractions++;
+ addLikes(1);
+
+ const surprise=make("section","interactiveCard");
+
+ surprise.append(
+  make("div","cardLabel","NOTIFICATION OPENED"),
+  make("div","cardTitle","You opened the notification!"),
+  make(
+   "div","cardSmall",
+   "Nothing new here. Keep scrolling..."
+  )
+ );
+
+ const feed=$("feed");
+ const before=feed.scrollTop;
+
+ feed.prepend(surprise);
+
+ feed.scrollTop=before+surprise.offsetHeight;
+ poseAnchor+=surprise.offsetHeight;
+};
+
+$("feed").addEventListener("scroll",()=>{
+ const f=$("feed");
+
+ checkPoseProgress();
+
+ if(
+  f.scrollTop+f.clientHeight>=
+  f.scrollHeight-600
+ ){
+  appendFeed();
+ }
+});
+
+appendFeed();
+
+$("appA").onclick=()=>{
+ $("home").style.display="none";
+ $("feed").scrollTop=0;
+
+ poseAnchor=0;
+ socialOpen=true;
+
+ clearInterval(toastLoop);
+
+ toastLoop=setInterval(()=>{
+  randomSocialNotification();
+ },14000);
+};
+
+/* ======================================
+   NEW DANCE SYSTEM
+====================================== */
+
+/* PRELOAD FRAMES */
+
+danceFrames.forEach(src=>{
+ const img=new Image();
+ img.src=src;
+});
+
+/* CAPTURE LAST SKELETON POSITION */
+
+function captureSkeletonLocation(){
+ const r=$("walker").getBoundingClientRect();
+
+ if(r.width>0&&r.height>0){
+  skeletonLocation={
+   x:r.left+r.width/2,
+   y:r.bottom,
+   width:r.width,
+   height:r.height
+  };
+ }else{
+  skeletonLocation={
+   x:innerWidth*.7,
+   y:innerHeight*.68,
+   width:innerHeight*.2,
+   height:innerHeight*.25
+  };
+ }
+}
+
+/* UPDATE ONE SKELETON POSITION */
+
+function positionDanceLeader(x,y){
+ const leader=$("danceLeader");
+
+ if(!leader)return;
+
+ /*
+  Keep skeleton inside the screen.
+  The coordinates indicate its feet.
+ */
+
+ const halfWidth=danceSkeletonHeight*.35;
+ const safeX=Math.max(
+  halfWidth,
+  Math.min(innerWidth-halfWidth,x)
+ );
+
+ const safeY=Math.max(
+  danceSkeletonHeight*.75,
+  Math.min(innerHeight-10,y)
+ );
+
+ leader.style.left=safeX+"px";
+ leader.style.top=safeY+"px";
+}
+
+/* START DANCE */
+
+function startSkeletonDance(){
+ if(endingStarted||page!=="main")return;
+
+ endingStarted=true;
+ danceActive=true;
+ endingSequenceStarted=false;
+
+ captureSkeletonLocation();
+
+ clearInterval(toastLoop);
+ clearInterval(noteLoop);
+ clearTimeout(toastTimer);
+
+ $("steps").pause();
+ $("ding").pause();
+ $("socialToast").classList.remove("show");
+
+ /*
+  Dance begins at the same position
+  as the final seated skeleton.
+ */
+
+ danceMouseX=skeletonLocation.x;
+ danceMouseY=skeletonLocation.y;
+
+ danceSkeletonHeight=Math.min(
+  innerHeight*.42,
+  skeletonLocation.height*1.65
+ );
+
+ const leader=$("danceLeader");
+
+ leader.style.height=danceSkeletonHeight+"px";
+ leader.src=danceFrames[0];
+
+ positionDanceLeader(danceMouseX,danceMouseY);
+
+ $("walker").style.opacity="0";
+
+ danceCount=1;
+ danceFrame=0;
+
+ $("danceCounter").textContent="1 / 10";
+
+ $("danceScene").classList.add("on");
+
+ $("danceCursor").style.left=danceMouseX+"px";
+ $("danceCursor").style.top=
+  Math.max(15,danceMouseY-danceSkeletonHeight*.65)+"px";
+
+ /* Start music */
+
+ const music=$("danceMusic");
+
+ music.pause();
+ music.currentTime=0;
+ music.volume=.8;
+ music.loop=true;
+
+ music.play().catch(err=>{
+  console.warn(
+   "Dance music could not autoplay:",
+   err
+  );
+ });
+
+ /* Animate all 6 dance frames */
+
+ clearInterval(danceInterval);
+
+ danceInterval=setInterval(()=>{
+  if(!danceActive)return;
+
+  danceFrame=(danceFrame+1)%danceFrames.length;
+
+  /*
+   All skeletons dance together.
+   Each one can have a different
+   animation phase.
+  */
+
+  document.querySelectorAll(
+   "#danceSkeletons .dancingSkeleton"
+  ).forEach((img,index)=>{
+   const frameIndex=
+    (danceFrame+index*2)%danceFrames.length;
+
+   img.src=danceFrames[frameIndex];
+  });
+
+ },DANCE_FRAME_SPEED);
+}
+
+/* MOUSE FOLLOWING */
+
+$("danceScene").addEventListener(
+ "pointermove",
+ e=>{
+  if(!danceActive)return;
+
+  danceMouseX=e.clientX;
+  danceMouseY=e.clientY;
+
+  positionDanceLeader(
+   danceMouseX,
+   danceMouseY
+  );
+
+  $("danceCursor").style.left=e.clientX+"px";
+  $("danceCursor").style.top=e.clientY+"px";
+ }
+);
+
+/* CLICK TO MULTIPLY */
+
+$("danceScene").addEventListener(
+ "pointerdown",
+ e=>{
+  if(!danceActive)return;
+
+  if(danceCount>=MAX_SKELETONS)return;
+
+  e.preventDefault();
+
+  /*
+   Each click leaves a dancing
+   skeleton at that position.
+  */
+
+  const clone=document.createElement("img");
+
+  clone.className="dancingSkeleton danceClone";
+  clone.alt="Dancing skeleton";
+
+  clone.src=danceFrames[
+   (danceFrame+danceCount*2)%danceFrames.length
+  ];
+
+  /* Slight size variety */
+
+  const scale=.82+Math.random()*.25;
+
+  clone.style.height=
+   danceSkeletonHeight*scale+"px";
+
+  /*
+   Offset slightly so the clone
+   does not fully cover the leader.
+  */
+
+  const x=Math.max(
+   danceSkeletonHeight*.25,
+   Math.min(
+    innerWidth-danceSkeletonHeight*.25,
+    e.clientX+(Math.random()-.5)*60
+   )
+  );
+
+  const y=Math.max(
+   danceSkeletonHeight*.7,
+   Math.min(
+    innerHeight-8,
+    e.clientY+(Math.random()-.5)*30
+   )
+  );
+
+  clone.style.left=x+"px";
+  clone.style.top=y+"px";
+
+  clone.style.animationDelay=
+   -(Math.random()*.4)+"s";
+
+  $("danceSkeletons").appendChild(clone);
+
+  danceCount++;
+
+  $("danceCounter").textContent=
+   danceCount+" / "+MAX_SKELETONS;
+
+  /*
+   When 10 skeletons are visible,
+   suddenly turn everything black.
+  */
+
+  if(danceCount>=MAX_SKELETONS){
+   setTimeout(()=>{
+    finishSkeletonDance();
+   },500);
+  }
+ }
+);
+
+/* STOP DANCE AND BLACKOUT */
+
+function finishSkeletonDance(){
+ if(!danceActive||endingSequenceStarted)return;
+
+ endingSequenceStarted=true;
+ danceActive=false;
+
+ clearInterval(danceInterval);
+
+ /* Stop disco music immediately */
+
+ const music=$("danceMusic");
+
+ music.pause();
+ music.currentTime=0;
+
+ /* Instant black screen */
+
+ $("ending").classList.add("on");
+
+ $("blackCurtain").style.transition=
+  "opacity .08s linear";
+
+ $("blackCurtain").classList.add("full");
+
+ $("danceScene").classList.remove("on");
+
+ /* Continue original ending */
+
+ startEndingAfterDance();
+}
+
+/* ======================================
+   CHURCH BELL THEN CROW
+====================================== */
+
+function playEndingSounds(){
+ const bell=$("churchSound");
+ const crow=$("crowSound");
+
+ bell.pause();
+ crow.pause();
+
+ bell.currentTime=0;
+ crow.currentTime=0;
+
+ bell.volume=.8;
+ crow.volume=.75;
+
+ let crowStarted=false;
+
+ function startCrow(){
+  if(crowStarted)return;
+  crowStarted=true;
+
+  bell.onended=null;
+  bell.onerror=null;
+
+  crow.play().catch(err=>{
+   console.warn("Crow sound:",err);
+  });
+ }
+
+ bell.onended=startCrow;
+ bell.onerror=startCrow;
+
+ bell.play().catch(()=>{
+  startCrow();
+ });
+}
+
+/* ======================================
+   ENDING
+====================================== */
+
+function delay(ms){
+ return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+async function startEndingAfterDance(){
+ playEndingSounds();
+
+ await delay(3200);
+
+ $("endingMessage").classList.add("visible");
+
+ await delay(2700);
+
+ $("endingMessage").classList.remove("visible");
+
+ await delay(1350);
+
+ $("graveScene").classList.add("visible");
+
+ addFirstGrave();
+}
+
+/* FIRST GRAVE */
+
+function addFirstGrave(){
+ const pos=skeletonLocation||{
+  x:innerWidth*.7,
+  y:innerHeight*.68,
+  height:innerHeight*.25
+ };
+
+ const width=Math.max(
+  80,
+  Math.min(150,pos.height*.52)
+ );
+
+ $("graveScene").style.setProperty(
+  "--first-grave-width",
+  width+"px"
+ );
+
+ addGraveAtPixels(
+  pos.x,
+  pos.y,
+  1,
+  true
+ );
+}
+
+/* ADD GRAVE */
+
+function addGraveAtPixels(x,y,scale=1,center=false){
+ const img=document.createElement("img");
+
+ img.src="graveyard.png";
+ img.alt="Gravestone";
+
+ img.className="grave"+(center?" center":"");
+
+ img.style.left=x+"px";
+ img.style.top=y+"px";
+
+ img.style.setProperty(
+  "--grave-scale",
+  scale
+ );
+
+ img.style.zIndex=center
+  ?3
+  :String(Math.max(1,Math.round(5-scale*3)));
+
+ $("graveScene").appendChild(img);
+}
+
+/* CLICK TO MULTIPLY GRAVES */
+
+$("graveScene").addEventListener("click",()=>{
+ if(!endingStarted)return;
+
+ graveClicks++;
+
+ const count=$("graveScene")
+  .querySelectorAll(".grave").length;
+
+ if(count>=180)return;
+
+ const more=Math.min(
+  180-count,
+  Math.max(2,Math.floor(count*.9)+2)
+ );
+
+ for(let i=0;i<more;i++){
+  const x=innerWidth*(.05+Math.random()*.9);
+  const y=innerHeight*(.35+Math.random()*.6);
+  const scale=.25+Math.random()*.6;
+
+  setTimeout(()=>{
+   addGraveAtPixels(x,y,scale,false);
+  },i*35);
+ }
+});
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
